@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>No Connection</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #FBFAF7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Inter', sans-serif;
+      color: #222;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      html, body { background-color: #111; color: #eee; }
+      p { color: #bbb; }
+      button { background-color: #fff; color: #000; }
+      button:hover { background-color: #ddd; }
+    }
+
+    .container {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    img {
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+      opacity: 0.9;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    p {
+      font-size: 16px;
+      font-weight: 400;
+      margin: 0;
+      color: #555;
+      max-width: 280px;
+    }
+
+    button {
+      margin-top: 10px;
+      font-size: 16px;
+      font-weight: 500;
+      background-color: #000;
+      color: #fff;
+      padding: 10px 24px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #333;
+    }
+
+    .draggable {
+      -webkit-app-region: drag;
+      width: 100%;
+      height: 40px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      border-bottom: 1px solid #333;
+      opacity: 0.1;
+    }
+  </style>
+</head>
+<body>
+    <div class="draggable"></div>
+  <div class="container">
+    <img src="../resources/app_icon.png" alt="App Icon">
+    <h1>No Connection</h1>
+    <p>We can’t reach the app right now. We’ll retry automatically.</p>
+    <button id="retryButton">Retry</button>
+  </div>
+
+  <script>
+    document.getElementById('retryButton').addEventListener('click', () => {
+      window.app?.retryConnection();
+      console.log('Retry button clicked');
+    });
+    console.log('No connection');
+  </script>
+</body>
+</html>

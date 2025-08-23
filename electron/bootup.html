@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- Your CSP can stay strict; no remote fetches needed now -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data: file:;">
+    <style>
+      html, body { height: 100%; width: 100%; margin: 0; }
+      body { background:#FBFAF7; display:flex; align-items:center; justify-content:center; transition: background-color 0.3s ease, opacity 0.35s ease; opacity: 1; }
+      canvas { width: 500px; display:flex; align-items:center; justify-content:center; }
+      .draggable {
+      -webkit-app-region: drag;
+      width: 100%;
+      height: 40px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      border-bottom: 1px solid #333;
+      opacity: 0.1;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { background: #111; }
+    }
+    </style>
+  </head>
+  <body>
+    <div class="draggable"></div>
+    <canvas id="canvas" width="500" height="500"></canvas>
+    <script>
+      function resizeCanvasToDisplaySize(canvas) {
+        const ratio = window.devicePixelRatio || 1;
+        const w = Math.floor(canvas.clientWidth * ratio);
+        const h = Math.floor(canvas.clientHeight * ratio);
+        if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; return true; }
+        return false;
+      }
+
+      const canvas = document.getElementById('canvas');
+      const { Fit, Alignment, Layout } = riveAPI.enums;
+
+      const r = riveAPI.create({
+        src: riveAssets.bootup,
+        canvas,
+        autoplay: true,
+        stateMachines: 'State Machine 1',
+            
+        onLoad: () => {
+          const vmi = r.viewModelInstance;
+
+        },
+      });
+
+      window.addEventListener('resize', () => {
+        resizeCanvasToDisplaySize(canvas);
+        r?.resizeDrawingSurfaceToCanvas?.();
+      });
+
+      // Fade out when told by main
+      window.events?.onSplashFade?.(() => {
+        try { document.body.style.opacity = '0'; } catch {}
+      });
+    </script>
+  </body>
+</html>

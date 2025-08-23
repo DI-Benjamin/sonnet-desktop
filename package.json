@@ -1,0 +1,39 @@
+{
+  "name": "sonnet-desktop",
+  "productName": "Sonnet Studio",
+  "appId": "com.digitalindividuals.sonnetstudio",
+  "copyright": "Copyright © 2025 Digital Individuals",
+  "build": {
+    "appId": "com.digitalindividuals.sonnetstudio",
+    "productName": "Sonnet Studio",
+    "copyright": "Copyright © 2025 Digital Individuals",
+    "mac": {
+      "target": "dmg",
+      "icon": "resources/AppIcon.icns"
+    },
+    "extraResources": [
+    { "from": "resources/animations", "to": "animations", "filter": ["**/*"] }
+  ]
+  },
+  "version": "1.0.0",
+  "description": "Sonnet studio the local experience",
+  "license": "ISC",
+  "author": "Digital Individuals",
+  "type": "commonjs",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
+  },
+  "devDependencies": {
+    "@electron-forge/maker-dmg": "^7.8.3",
+    "electron": "^37.3.1",
+    "electron-builder": "^26.0.12"
+  },
+  "dependencies": {
+    "@rive-app/canvas": "^2.31.2"
+  }
+}
