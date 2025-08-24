@@ -7,10 +7,8 @@
   "publish": {
     "provider": "github",
     "releaseType": "release",
-    "private": true,
     "owner": "DI-Benjamin",
-    "repo": "sonnet-desktop",
-    "token": "${GH_TOKEN}"
+    "repo": "sonnet-desktop"
   },
   "build": {
     "appId": "com.digitalindividuals.sonnetstudio",
@@ -38,7 +36,7 @@
     },
     "extraResources": [
       {
-        "from": "resources/animations",
+        "from": "./resources/animations",
         "to": "animations",
         "filter": [
           "**/*"
@@ -53,7 +51,7 @@
   "type": "commonjs",
   "main": "electron/main.js",
   "scripts": {
-    "start": "electron .",
+    "start": "electron-forge start",
     "dev": "electron .",
     "build": "electron-builder",
     "build:win": "electron-builder --win --publish=always",
@@ -61,15 +59,27 @@
     "build:linux": "electron-builder --linux --publish=always",
     "build:all": "electron-builder --mac --win --linux --publish=always",
     "dist": "electron-builder --publish=never",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish"
   },
   "devDependencies": {
+    "@electron-forge/cli": "^7.8.3",
+    "@electron-forge/maker-deb": "^7.8.3",
     "@electron-forge/maker-dmg": "^7.8.3",
-    "electron": "^37.3.1",
-    "electron-builder": "^26.0.12"
+    "@electron-forge/maker-rpm": "^7.8.3",
+    "@electron-forge/maker-squirrel": "^7.8.3",
+    "@electron-forge/maker-zip": "^7.8.3",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.8.3",
+    "@electron-forge/plugin-fuses": "^7.8.3",
+    "@electron-forge/publisher-github": "^7.8.3",
+    "@electron/fuses": "^1.8.0",
+    "electron": "^37.3.1"
   },
   "dependencies": {
     "@rive-app/canvas": "^2.31.2",
+    "electron-squirrel-startup": "^1.0.1",
     "electron-updater": "^6.6.2"
   }
 }

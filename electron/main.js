@@ -2,7 +2,8 @@ const { app, BrowserWindow, BrowserView, net } = require('electron')
 const { ipcMain, nativeTheme, Notification, session, globalShortcut } = require('electron')
 const path = require('path')
 const { Tray, Menu, nativeImage } = require('electron/main')
-const { autoUpdater, AppUpdater } = require('electron-updater')
+const { autoUpdater } = require('electron')
+const { updateElectronApp, UpdateSourceType } = require('update-electron-app')
 
 const site = "http://localhost:3000"
 let tray
@@ -14,106 +15,66 @@ let updateInfo = null
 autoUpdater.autoDownload = false; // Changed to false for manual control
 autoUpdater.autoInstallOnAppQuit = true;
 
-// Update event handlers
+updateElectronApp({
+  updateSource: {
+    type: UpdateSourceType.ElectronPublicUpdateService,
+  },
+  updateInterval: '10 minutes',
+  logger: console,
+  notifyUser: false
+})
+
 autoUpdater.on('checking-for-update', () => {
-  console.log('Checking for update...')
-  if (mainWin && appView) {
-    appView.webContents.send('update-status', { 
-      type: 'checking', 
-      message: 'Checking for updates...' 
-    })
-  }
+  appView?.webContents.send('update-status', { type: 'checking', message: 'Checking for updates...' })
 })
 
 autoUpdater.on('update-available', (info) => {
-  console.log('Update available:', info)
-  updateInfo = info
-  if (mainWin && appView) {
-    appView.webContents.send('update-status', { 
-      type: 'available', 
-      message: 'Update available',
-      version: info.version,
-      releaseDate: info.releaseDate,
-      files: info.files
-    })
-  }
+  // built-in does not include the same fields; include what exists
+  appView?.webContents.send('update-status', { 
+    type: 'available',
+    message: 'Update available. Downloading in background…',
+    // releaseName/date are available only later; see docs
+  })
 })
 
-autoUpdater.on('update-not-available', (info) => {
-  console.log('Update not available:', info)
-  if (mainWin && appView) {
-    appView.webContents.send('update-status', { 
-      type: 'not-available', 
-      message: 'You are running the latest version',
-      version: info.version
-    })
-  }
+autoUpdater.on('update-not-available', (_info) => {
+  appView?.webContents.send('update-status', { 
+    type: 'not-available', 
+    message: 'You are running the latest version'
+  })
 })
 
 autoUpdater.on('error', (err) => {
-  console.error('Update error:', err)
-  if (mainWin && appView) {
-    appView.webContents.send('update-status', { 
-      type: 'error', 
-      message: 'Error checking for updates',
-      error: err.message
-    })
-  }
+  appView?.webContents.send('update-status', { 
+    type: 'error', 
+    message: 'Error checking for updates',
+    error: err.message
+  })
 })
 
-autoUpdater.on('download-progress', (progressObj) => {
-  let log_message = "Download speed: " + progressObj.bytesPerSecond;
-  log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
-  log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
-  console.log(log_message)
-  
-  if (mainWin && appView) {
-    appView.webContents.send('update-status', { 
-      type: 'downloading', 
-      message: 'Downloading update...',
-      progress: progressObj
-    })
-  }
-})
-
-autoUpdater.on('update-downloaded', (info) => {
-  console.log('Update downloaded:', info)
-  updateInfo = info
-  if (mainWin && appView) {
-    appView.webContents.send('update-status', { 
-      type: 'downloaded', 
-      message: 'Update downloaded and ready to install',
-      version: info.version
-    })
-  }
-  
-  // Show notification
+autoUpdater.on('update-downloaded', (_event, releaseNotes, releaseName, releaseDate /*, updateURL */) => {
+  // You can cache your own "updateInfo" from these args if you like:
+  updateInfo = { version: releaseName, releaseDate }
+  appView?.webContents.send('update-status', { 
+    type: 'downloaded',
+    message: 'Update downloaded and ready to install',
+    version: releaseName,
+    releaseDate: releaseDate?.toString?.()
+  })
   new Notification({
     title: 'Sonnet Studio Update Ready',
-    body: `Version ${info.version} has been downloaded and is ready to install.`
+    body: `Version ${releaseName} has been downloaded and is ready to install.`
   }).show()
 })
+
 
 // IPC handlers for update management
 ipcMain.handle('check-for-updates', async () => {
   try {
-    const result = await autoUpdater.checkForUpdates()
-    return result
+    await autoUpdater.checkForUpdates()
+    return true
   } catch (error) {
     console.error('Error checking for updates:', error)
-    throw error
-  }
-})
-
-ipcMain.handle('download-update', async () => {
-  try {
-    if (updateInfo) {
-      await autoUpdater.downloadUpdate()
-      return true
-    }
-    return false
-  } catch (error) {
-    console.error('Error downloading update:', error)
     throw error
   }
 })
