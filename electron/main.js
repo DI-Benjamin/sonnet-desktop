@@ -2,12 +2,129 @@ const { app, BrowserWindow, BrowserView, net } = require('electron')
 const { ipcMain, nativeTheme, Notification, session, globalShortcut } = require('electron')
 const path = require('path')
 const { Tray, Menu, nativeImage } = require('electron/main')
+const { autoUpdater, AppUpdater } = require('electron-updater')
 
 const site = "http://localhost:3000"
 let tray
 let mainWin
 let appView
 let splashView
+let updateInfo = null
+
+autoUpdater.autoDownload = false; // Changed to false for manual control
+autoUpdater.autoInstallOnAppQuit = true;
+
+// Update event handlers
+autoUpdater.on('checking-for-update', () => {
+  console.log('Checking for update...')
+  if (mainWin && appView) {
+    appView.webContents.send('update-status', { 
+      type: 'checking', 
+      message: 'Checking for updates...' 
+    })
+  }
+})
+
+autoUpdater.on('update-available', (info) => {
+  console.log('Update available:', info)
+  updateInfo = info
+  if (mainWin && appView) {
+    appView.webContents.send('update-status', { 
+      type: 'available', 
+      message: 'Update available',
+      version: info.version,
+      releaseDate: info.releaseDate,
+      files: info.files
+    })
+  }
+})
+
+autoUpdater.on('update-not-available', (info) => {
+  console.log('Update not available:', info)
+  if (mainWin && appView) {
+    appView.webContents.send('update-status', { 
+      type: 'not-available', 
+      message: 'You are running the latest version',
+      version: info.version
+    })
+  }
+})
+
+autoUpdater.on('error', (err) => {
+  console.error('Update error:', err)
+  if (mainWin && appView) {
+    appView.webContents.send('update-status', { 
+      type: 'error', 
+      message: 'Error checking for updates',
+      error: err.message
+    })
+  }
+})
+
+autoUpdater.on('download-progress', (progressObj) => {
+  let log_message = "Download speed: " + progressObj.bytesPerSecond;
+  log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
+  log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+  console.log(log_message)
+  
+  if (mainWin && appView) {
+    appView.webContents.send('update-status', { 
+      type: 'downloading', 
+      message: 'Downloading update...',
+      progress: progressObj
+    })
+  }
+})
+
+autoUpdater.on('update-downloaded', (info) => {
+  console.log('Update downloaded:', info)
+  updateInfo = info
+  if (mainWin && appView) {
+    appView.webContents.send('update-status', { 
+      type: 'downloaded', 
+      message: 'Update downloaded and ready to install',
+      version: info.version
+    })
+  }
+  
+  // Show notification
+  new Notification({
+    title: 'Sonnet Studio Update Ready',
+    body: `Version ${info.version} has been downloaded and is ready to install.`
+  }).show()
+})
+
+// IPC handlers for update management
+ipcMain.handle('check-for-updates', async () => {
+  try {
+    const result = await autoUpdater.checkForUpdates()
+    return result
+  } catch (error) {
+    console.error('Error checking for updates:', error)
+    throw error
+  }
+})
+
+ipcMain.handle('download-update', async () => {
+  try {
+    if (updateInfo) {
+      await autoUpdater.downloadUpdate()
+      return true
+    }
+    return false
+  } catch (error) {
+    console.error('Error downloading update:', error)
+    throw error
+  }
+})
+
+ipcMain.handle('install-update', () => {
+  autoUpdater.quitAndInstall()
+})
+
+ipcMain.handle('get-update-info', () => {
+  return updateInfo
+})
 
 // NEW: show offline page in the app BrowserView and start retrying
 function showOfflineInAppView() {
@@ -71,6 +188,10 @@ function stopAutoRetry(win) {
     retryTimers.delete(win)
   }
 }
+
+ipcMain.handle('get-app-version', () => {
+  return app.getVersion(); // Gets version from your package.json
+});
 
 const createWindow = () => {
   // Create the single BrowserWindow
@@ -200,7 +321,6 @@ ipcMain.on('renderer-online-status', async (event, { online }) => {
   }
 })
 
-
 ipcMain.handle('dark-mode:toggle', () => {
     if (nativeTheme.shouldUseDarkColors) {
       nativeTheme.themeSource = 'light'
@@ -255,6 +375,11 @@ app.whenReady().then(() => {
       createWindow()
     }
   })
+
+  // Check for updates on startup, but don't auto-download
+  setTimeout(() => {
+    autoUpdater.checkForUpdates()
+  }, 5000) // Wait 5 seconds after startup
 })
 
 app.on('ready', () => {
@@ -274,4 +399,3 @@ app.on('window-all-closed', () => {
     app.quit()
   }
 })
-

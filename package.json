@@ -3,6 +3,15 @@
   "productName": "Sonnet Studio",
   "appId": "com.digitalindividuals.sonnetstudio",
   "copyright": "Copyright © 2025 Digital Individuals",
+  "repository": "https://github.com/DI-Benjamin/sonnet-desktop",
+  "publish": {
+    "provider": "github",
+    "releaseType": "release",
+    "private": true,
+    "owner": "DI-Benjamin",
+    "repo": "sonnet-desktop",
+    "token": "${GH_TOKEN}"
+  },
   "build": {
     "appId": "com.digitalindividuals.sonnetstudio",
     "productName": "Sonnet Studio",
@@ -11,11 +20,33 @@
       "target": "dmg",
       "icon": "resources/AppIcon.icns"
     },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ],
+      "icon": "resources/AppIcon.ico"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "resources/AppIcon.png"
+    },
     "extraResources": [
-    { "from": "resources/animations", "to": "animations", "filter": ["**/*"] }
-  ]
+      {
+        "from": "resources/animations",
+        "to": "animations",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ]
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Sonnet studio the local experience",
   "license": "ISC",
   "author": "Digital Individuals",
@@ -24,9 +55,13 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
-    "build:win": "electron-builder --win",
-    "build:mac": "electron-builder --mac",
-    "build:linux": "electron-builder --linux"
+    "build": "electron-builder",
+    "build:win": "electron-builder --win --publish=always",
+    "build:mac": "electron-builder --mac --publish=always",
+    "build:linux": "electron-builder --linux --publish=always",
+    "build:all": "electron-builder --mac --win --linux --publish=always",
+    "dist": "electron-builder --publish=never",
+    "postinstall": "electron-builder install-app-deps"
   },
   "devDependencies": {
     "@electron-forge/maker-dmg": "^7.8.3",
@@ -34,6 +69,7 @@
     "electron-builder": "^26.0.12"
   },
   "dependencies": {
-    "@rive-app/canvas": "^2.31.2"
+    "@rive-app/canvas": "^2.31.2",
+    "electron-updater": "^6.6.2"
   }
 }

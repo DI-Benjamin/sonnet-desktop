@@ -41,10 +41,53 @@ contextBridge.exposeInMainWorld('events', {
   }
 });
 
-// (rest of your bridges)
-try { window.addEventListener('online', () => ipcRenderer.send('renderer-online-status', { online: true })); window.addEventListener('offline', () => ipcRenderer.send('renderer-online-status', { online: false })); } catch {}
-contextBridge.exposeInMainWorld('app', { retryConnection: () => ipcRenderer.send('retry-connection') });
-try { if (typeof Notification !== 'undefined' && Notification.requestPermission) Notification.requestPermission() } catch {}
-contextBridge.exposeInMainWorld('desktopAPI', { notify: (msg) => ipcRenderer.send('notify', msg) });
-contextBridge.exposeInMainWorld('appEnv', { isElectron: true });
-console.log('Preload script loaded');
+// Network status handlers
+try { 
+  window.addEventListener('online', () => ipcRenderer.send('renderer-online-status', { online: true })); 
+  window.addEventListener('offline', () => ipcRenderer.send('renderer-online-status', { online: false })); 
+} catch {}
+
+// App retry connection
+contextBridge.exposeInMainWorld('app', { 
+  retryConnection: () => ipcRenderer.send('retry-connection') 
+});
+
+// Notifications setup
+try { 
+  if (typeof Notification !== 'undefined' && Notification.requestPermission) 
+    Notification.requestPermission() 
+} catch {}
+
+// Desktop API
+contextBridge.exposeInMainWorld('desktopAPI', { 
+  notify: (msg) => ipcRenderer.send('notify', msg) 
+});
+
+// App environment
+contextBridge.exposeInMainWorld('appEnv', { 
+  isElectron: true 
+});
+
+// Enhanced Electron API with update management
+contextBridge.exposeInMainWorld('electronAPI', {
+  getVersion: () => ipcRenderer.invoke('get-app-version'),
+  isElectron: true,
+  
+  // Update management functions
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  downloadUpdate: () => ipcRenderer.invoke('download-update'),
+  installUpdate: () => ipcRenderer.invoke('install-update'),
+  getUpdateInfo: () => ipcRenderer.invoke('get-update-info'),
+  
+  // Update status listener
+  onUpdateStatus: (callback) => {
+    ipcRenderer.on('update-status', (event, status) => callback(status));
+  },
+  
+  // Remove update status listener
+  removeUpdateStatusListener: () => {
+    ipcRenderer.removeAllListeners('update-status');
+  }
+});
+
+console.log('Enhanced preload script loaded with update management');
