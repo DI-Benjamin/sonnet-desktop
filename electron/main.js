@@ -18,6 +18,12 @@ autoUpdater.autoInstallOnAppQuit = true;
 updateElectronApp({
   updateSource: {
     type: UpdateSourceType.ElectronPublicUpdateService,
+    repo: 'DI-Benjamin/sonnet-desktop',
+    token: process.env.GH_TOKEN,
+    prerelease: false,
+    draft: false,
+    force: true,
+    generateReleaseNotes: true
   },
   updateInterval: '10 minutes',
   logger: console,
