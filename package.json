@@ -52,14 +52,6 @@
   "main": "electron/main.js",
   "scripts": {
     "start": "electron-forge start",
-    "dev": "electron .",
-    "build": "electron-builder",
-    "build:win": "electron-builder --win --publish=always",
-    "build:mac": "electron-builder --mac --publish=always",
-    "build:linux": "electron-builder --linux --publish=always",
-    "build:all": "electron-builder --mac --win --linux --publish=always",
-    "dist": "electron-builder --publish=never",
-    "postinstall": "electron-builder install-app-deps",
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish"
@@ -75,12 +67,14 @@
     "@electron-forge/plugin-fuses": "^7.8.3",
     "@electron-forge/publisher-github": "^7.8.3",
     "@electron/fuses": "^1.8.0",
+    "@electron/osx-sign": "^2.0.0",
     "electron": "^37.3.1"
   },
   "dependencies": {
     "@rive-app/canvas": "^2.31.2",
     "electron-squirrel-startup": "^1.0.1",
     "electron-updater": "^6.6.2",
+    "env-cmd": "^11.0.0",
     "update-electron-app": "^3.1.1"
   }
 }

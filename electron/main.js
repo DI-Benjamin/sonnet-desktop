@@ -181,6 +181,7 @@ const createWindow = () => {
       nodeIntegrationInWorker: false,
       webviewTag: true,
       devTools: !app.isPackaged,
+      partition: 'persist:sonnet'
     }
   })
 
@@ -193,6 +194,7 @@ const createWindow = () => {
       nodeIntegration: false,
       nodeIntegrationInWorker: false,
       devTools: !app.isPackaged,
+      partition: 'persist:sonnet'
     }
   })
   splashView = new BrowserView({
@@ -203,6 +205,7 @@ const createWindow = () => {
       nodeIntegration: false,
       nodeIntegrationInWorker: false,
       devTools: !app.isPackaged,
+      partition: 'persist:sonnet'
     }
   })
 

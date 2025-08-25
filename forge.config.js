@@ -7,6 +7,18 @@ module.exports = {
     icon: './resources/AppIcon.icns',
     setupIcon: './resources/AppIcon.icns',
     background: './resources/dmg_background.png',
+    osxSign: {
+      optionsForFile: (filePath) => {
+        return {
+          entitlements: './resources/build/entitlements.mac.plist'
+        };
+      }
+    },
+    osxNotarize: {
+      appleId: process.env.APPLE_ID,
+      appleIdPassword: process.env.APPLE_PASSWORD,
+      teamId: process.env.APPLE_TEAM_ID
+    }
   },
   rebuildConfig: {},
   makers: [
