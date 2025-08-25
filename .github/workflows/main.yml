@@ -25,12 +25,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
       - run: npm ci
       - run: npm run build --if-present
       - name: Forge make
-        run: npx electron-forge make --ci
+        run: npx electron-forge make
 
   publish:
     name: Publish (${{ matrix.os }})
@@ -49,10 +49,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
       - run: npm ci
       - run: npm run build --if-present
 
       - name: Forge publish
-        run: npx electron-forge publish --ci
+        run: npx electron-forge publish
