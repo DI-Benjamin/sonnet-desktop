@@ -1,79 +1,31 @@
-name: Build & Publish (Electron Forge)
+name: Build/release
 
-on:
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: "Optional tag to create before publishing (e.g. v1.0.0)"
-        required: false
-        default: ""
-  push:
-    tags:
-      - "v*"
-
-permissions:
-  contents: write   # required for creating release drafts
-
-concurrency:
-  group: forge-publish-${{ github.ref }}
-  cancel-in-progress: true
+on: push
 
 jobs:
-  forge:
-    name: ${{ matrix.os }} • Node ${{ matrix.node }}
+  release:
     runs-on: ${{ matrix.os }}
+
     strategy:
-      fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
-        node: [20]
-
-    env:
-      # electron-forge's GitHub publisher looks for GH_TOKEN
-      GH_TOKEN: ${{ secrets.GH_TOKEN != '' && secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
-      npm_config_fund: "false"
-      npm_config_audit: "false"
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Check out Git repository
+        uses: actions/checkout@v1
+
+      - name: Install Node.js, NPM and Yarn
+        uses: actions/setup-node@v1
         with:
-          fetch-depth: 0
+          node-version: 22
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Build/release Electron app
+        uses: samuelmeuli/action-electron-builder@v1
         with:
-          node-version: ${{ matrix.node }}
-          cache: npm
+          # GitHub token, automatically provided to the action
+          # (No need to define this secret in the repo settings)
+          github_token: ${{ secrets.github_token }}
 
-      - name: Install Linux build deps
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            rpm fakeroot dpkg-dev xz-utils libarchive-tools
-
-      - name: Enable longpaths (Windows)
-        if: runner.os == 'Windows'
-        run: git config --system core.longpaths true
-
-      - name: Install dependencies
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
-        shell: bash
-
-      - name: Verify electron-forge
-        run: npx electron-forge --version
-
-      - name: Upload dist artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist-${{ runner.os }}
-          path: |
-            out/**
-            dist/**
-          if-no-files-found: ignore
+          # If the commit is tagged with a version (e.g. "v1.0.0"),
+          # release the app after building
+          release: ${{ startsWith(github.ref, 'refs/tags/v') }}
