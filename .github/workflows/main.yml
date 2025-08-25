@@ -28,31 +28,5 @@ jobs:
           node-version: "24"
           cache: npm
       - run: npm ci
-      - run: npm run build --if-present
-      - name: Forge make
-        run: npx electron-forge make
-
-  publish:
-    name: Publish (${{ matrix.os }})
-    needs: make
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest, macos-latest]
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      APPLE_ID: ${{ secrets.APPLE_ID }}
-      APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: npm
-      - run: npm ci
-      - run: npm run build --if-present
-
-      - name: Forge publish
-        run: npx electron-forge publish
+      - name: Forge make & publish
+        run: npm run publish
