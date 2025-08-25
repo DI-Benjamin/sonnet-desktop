@@ -17,7 +17,7 @@ module.exports = {
           icon: './resources/AppIcon.icns'
         },
         name: 'Sonnet Studio',
-        version: '1.0.1',
+        version: '1.0.0',
       },
     },
     {
@@ -25,7 +25,7 @@ module.exports = {
       platforms: ['darwin'],
       config: {
         name: 'Sonnet Studio',
-        version: '1.0.1',
+        version: '1.0.0',
         options: {
           icon: './resources/AppIcon.icns'
         },
@@ -48,7 +48,7 @@ module.exports = {
       name: '@electron-forge/maker-rpm',
       config: {
         name: 'Sonnet Studio',
-        version: '1.0.1',
+        version: '1.0.0',
         options: {
           icon: './resources/AppIcon.icns'
         },
