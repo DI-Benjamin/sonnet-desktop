@@ -21,7 +21,6 @@ jobs:
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-      MAC_CODESIGN_IDENTITY: ${{ secrets.APPLE_TEAM_ID }} # e.g., Developer ID Application: Your Org (TEAMID)
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -46,7 +45,6 @@ jobs:
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-      MAC_CODESIGN_IDENTITY: ${{ secrets.APPLE_TEAM_ID }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -55,25 +53,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build --if-present
-
-      # Install Apple Developer ID cert only on mac when publishing
-      - name: Install Apple signing cert
-        if: runner.os == 'macOS' && env.MAC_CODESIGN_IDENTITY != ''
-        env:
-          MAC_CERTS_P12: ${{ secrets.MAC_CERTS_P12 }}           # base64-encoded .p12
-          MAC_CERTS_PASSWORD: ${{ secrets.MAC_CERTS_PASSWORD }} # password for the .p12
-        run: |
-          if [ -z "$MAC_CERTS_P12" ]; then
-            echo "No MAC_CERTS_P12 provided; skipping cert install (mac build will be unsigned)."
-            exit 0
-          fi
-          CERT_PATH="$RUNNER_TEMP/certs.p12"
-          echo "$MAC_CERTS_P12" | base64 --decode > "$CERT_PATH"
-          security create-keychain -p "$MAC_CERTS_PASSWORD" build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "$MAC_CERTS_PASSWORD" build.keychain
-          security import "$CERT_PATH" -k build.keychain -P "$MAC_CERTS_PASSWORD" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple: -s -k "$MAC_CERTS_PASSWORD" build.keychain
 
       - name: Forge publish
         run: npx electron-forge publish --ci
