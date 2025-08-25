@@ -2,8 +2,11 @@ name: Build & Publish (Electron Forge)
 
 on:
   push:
-    tags:
-      - "v*.*.*" # only publish on version tags like v1.2.3
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   forge-publish:
