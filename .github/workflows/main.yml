@@ -9,39 +9,71 @@ on:
       - main
 
 jobs:
-  forge-publish:
-    name: Forge publish (${{ matrix.os }})
+  make:
+    name: Make (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
-
+        os: [ubuntu-latest, windows-latest, macos-latest]
     env:
-      # Needed by @electron-forge/publisher-github
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Only used on mac (notarization)
+      # Apple creds are optional. If absent, mac signing/notarize is skipped by forge.config.js gating.
       APPLE_ID: ${{ secrets.APPLE_ID }}
-      APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}   # app-specific password
+      APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-
+      MAC_CODESIGN_IDENTITY: ${{ secrets.APPLE_TEAM_ID }} # e.g., Developer ID Application: Your Org (TEAMID)
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "20"
           cache: npm
+      - run: npm ci
+      - run: npm run build --if-present
+      - name: Forge make
+        run: npx electron-forge make --ci
 
-      - name: Install deps
-        run: npm ci
+  publish:
+    name: Publish (${{ matrix.os }})
+    needs: make
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      MAC_CODESIGN_IDENTITY: ${{ secrets.APPLE_TEAM_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run build --if-present
 
-      # Optional: if you have a separate web build step in package.json
-      - name: Build (optional)
-        run: npm run build --if-present
+      # Install Apple Developer ID cert only on mac when publishing
+      - name: Install Apple signing cert
+        if: runner.os == 'macOS' && env.MAC_CODESIGN_IDENTITY != ''
+        env:
+          MAC_CERTS_P12: ${{ secrets.MAC_CERTS_P12 }}           # base64-encoded .p12
+          MAC_CERTS_PASSWORD: ${{ secrets.MAC_CERTS_PASSWORD }} # password for the .p12
+        run: |
+          if [ -z "$MAC_CERTS_P12" ]; then
+            echo "No MAC_CERTS_P12 provided; skipping cert install (mac build will be unsigned)."
+            exit 0
+          fi
+          CERT_PATH="$RUNNER_TEMP/certs.p12"
+          echo "$MAC_CERTS_P12" | base64 --decode > "$CERT_PATH"
+          security create-keychain -p "$MAC_CERTS_PASSWORD" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$MAC_CERTS_PASSWORD" build.keychain
+          security import "$CERT_PATH" -k build.keychain -P "$MAC_CERTS_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$MAC_CERTS_PASSWORD" build.keychain
 
-      # Publish with Electron Forge (reads forge.config.*)
-      - name: Electron Forge publish
+      - name: Forge publish
         run: npx electron-forge publish --ci

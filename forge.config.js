@@ -25,8 +25,9 @@ module.exports = {
     {
       name: '@electron-forge/maker-squirrel',
       config: {
+        setupIcon: './resources/AppIcon.ico',
         options: {
-          icon: './resources/AppIcon.icns'
+          icon: './resources/AppIcon.ico'
         },
         name: 'Sonnet Studio',
         version: '1.0.0',
@@ -59,12 +60,11 @@ module.exports = {
     {
       name: '@electron-forge/maker-deb',
       config: {
-        name: 'Sonnet Studio',
-        version: '1.0.0',
         options: {
-          icon: './resources/AppIcon.icns'
-        },
-      },
+          bin: 'sonnet-desktop',
+          icon: './resources/icons/png'
+        }
+      }
     },
   ],
   publishers: [
