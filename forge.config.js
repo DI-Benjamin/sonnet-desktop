@@ -11,13 +11,11 @@ module.exports = {
     appVersion: '1.0.0',
     buildVersion: '1.0.0',
     osxSign: {
-      optionsForFile: (filePath) => {
-        return {
-          entitlements: './resources/build/entitlements.mac.plist'
-        };
-      },
+      identity: 'Developer ID Application', // Let it auto-detect
       hardenedRuntime: true,
-      gatekeeperAssess: false
+      gatekeeperAssess: false,
+      entitlements: './resources/build/entitlements.mac.plist',
+      'entitlements-inherit': './resources/build/entitlements.mac.plist'
     },
     osxNotarize: {
       appleId: process.env.APPLE_ID,
