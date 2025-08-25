@@ -7,9 +7,6 @@ const { join } = require("path");
  */
 const log = (msg) => console.log(`\n${msg}`); // eslint-disable-line no-console
 
-/**
- * Exits the current process with an error code and message
- */
 const exit = (msg) => {
   console.error(msg);
   process.exit(1);
