@@ -36,9 +36,9 @@ module.exports = {
       platforms: ['darwin'],
       config: {
         name: 'Sonnet Studio',
-        version: '1.0.1',
+        version: '1.0.0',
         background: './resources/dmg_background.png',
-        setupIcon: './resources/AppIcon.icns',
+        icon: './resources/AppIcon.icns',
         options: {
           icon: './resources/AppIcon.icns',
         },
