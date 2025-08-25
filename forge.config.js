@@ -10,18 +10,20 @@ module.exports = {
     appBundleId: 'com.digitalindividuals.sonnetstudio',
     appVersion: '1.0.0',
     buildVersion: '1.0.0',
-    osxSign: {
-      identity: 'Developer ID Application', // Let it auto-detect
-      hardenedRuntime: true,
-      gatekeeperAssess: false,
-      entitlements: './resources/build/entitlements.mac.plist',
-      'entitlements-inherit': './resources/build/entitlements.mac.plist'
-    },
-    osxNotarize: {
-      appleId: process.env.APPLE_ID,
-      appleIdPassword: process.env.APPLE_PASSWORD,
-      teamId: process.env.APPLE_TEAM_ID
-    }
+    ...(process.env.APPLE_ID && {
+      osxSign: {
+        identity: 'Developer ID Application',
+        'hardened-runtime': true,
+        'gatekeeper-assess': false,
+        entitlements: './resources/build/entitlements.mac.plist',
+        'entitlements-inherit': './resources/build/entitlements.mac.plist'
+      },
+      osxNotarize: {
+        appleId: process.env.APPLE_ID,
+        appleIdPassword: process.env.APPLE_PASSWORD,
+        teamId: process.env.APPLE_TEAM_ID
+      }
+    })
   },
   rebuildConfig: {},
   makers: [
