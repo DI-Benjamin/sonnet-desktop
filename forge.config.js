@@ -7,12 +7,17 @@ module.exports = {
     icon: './resources/AppIcon.icns',
     setupIcon: './resources/AppIcon.icns',
     background: './resources/dmg_background.png',
+    appBundleId: 'com.digitalindividuals.sonnetstudio',
+    appVersion: '1.0.0',
+    buildVersion: '1.0.0',
     osxSign: {
       optionsForFile: (filePath) => {
         return {
           entitlements: './resources/build/entitlements.mac.plist'
         };
-      }
+      },
+      hardenedRuntime: true,
+      gatekeeperAssess: false
     },
     osxNotarize: {
       appleId: process.env.APPLE_ID,
