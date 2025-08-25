@@ -57,7 +57,7 @@ module.exports = {
       },
     },
     {
-      name: '@electron-forge/maker-rpm',
+      name: '@electron-forge/maker-deb',
       config: {
         name: 'Sonnet Studio',
         version: '1.0.0',
