@@ -7,23 +7,27 @@ module.exports = {
     icon: './resources/AppIcon.icns',
     setupIcon: './resources/AppIcon.icns',
     background: './resources/dmg_background.png',
-    appBundleId: 'com.digitalindividuals.sonnetstudio',
-    appVersion: '1.0.0',
-    buildVersion: '1.0.0',
-    ...(process.env.APPLE_ID && {
-      osxSign: {
-        identity: 'Developer ID Application',
-        'hardened-runtime': true,
-        'gatekeeper-assess': false,
-        entitlements: './resources/build/entitlements.mac.plist',
-        'entitlements-inherit': './resources/build/entitlements.mac.plist'
-      },
-      osxNotarize: {
-        appleId: process.env.APPLE_ID,
-        appleIdPassword: process.env.APPLE_PASSWORD,
-        teamId: process.env.APPLE_TEAM_ID
+    osxSign: {
+      identity: 'Benjamin Elbersen (XCCHM93MB7)', // Let it auto-detect
+      hardenedRuntime: true,
+      gatekeeperAssess: false,
+      keychain: process.env.MAC_KEYCHAIN_PATH || undefined,
+      optionsForFile: (filePath) => {
+        // Here, we keep it simple and return a single entitlements.plist file.
+        // You can use this callback to map different sets of entitlements
+        // to specific files in your packaged app.
+        
+
+        return {
+          entitlements: './resources/build/entitlements.mac.plist'
+        };
       }
-    })
+    },
+    osxNotarize: {
+      appleId: process.env.APPLE_ID,
+      appleIdPassword: process.env.APPLE_PASSWORD,
+      teamId: process.env.APPLE_TEAM_ID
+    }
   },
   rebuildConfig: {},
   makers: [

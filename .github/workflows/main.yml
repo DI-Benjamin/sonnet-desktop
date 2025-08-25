@@ -2,11 +2,12 @@ name: Build & Publish (Electron Forge)
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
+
+permissions:
+  contents: write  # required for @electron-forge/publisher-github
 
 jobs:
   make:
@@ -15,18 +16,62 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, macos-latest]
+
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # Apple creds are optional. If absent, mac signing/notarize is skipped by forge.config.js gating.
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      MAC_CERT_P12_BASE64: ${{ secrets.MAC_CERT_P12_BASE64 }}
+      MAC_CERT_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
+      MAC_KEYCHAIN_PASSWORD: ${{ secrets.MAC_KEYCHAIN_PASSWORD }}
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: "24"
-          cache: npm
+          node-version: '24'
+          cache: 'npm'
+
+      # --- macOS ONLY: import Developer ID certificate into a temp keychain ---
+      - name: Import Apple signing cert (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Create and unlock a temporary keychain
+          KEYCHAIN="$RUNNER_TEMP/build.keychain-db"
+          echo "::group::Create keychain"
+          security create-keychain -p "$MAC_KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 3600 "$KEYCHAIN"
+          security unlock-keychain -p "$MAC_KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          echo "::endgroup::"
+
+          # Make it the only user keychain searched for identities
+          echo "::group::Set keychain search list"
+          security list-keychains -d user -s "$KEYCHAIN"
+          security default-keychain -s "$KEYCHAIN"
+          echo "::endgroup::"
+
+          # Import the P12
+          echo "::group::Import Developer ID .p12"
+          echo "$MAC_CERT_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" -P "$MAC_CERT_PASSWORD" -T /usr/bin/codesign -T /usr/bin/security
+          # Allow codesign to access the key without prompts
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$MAC_KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          echo "::endgroup::"
+
+          # Show what identities are available (for debugging)
+          echo "::group::Find identities"
+          security find-identity -p codesigning -v "$KEYCHAIN" || true
+          echo "::endgroup::"
+
+          # Expose path for Forge (optional)
+          echo "MAC_KEYCHAIN_PATH=$KEYCHAIN" >> $GITHUB_ENV
+
       - run: npm ci
+
       - name: Forge make & publish
         run: npm run publish
