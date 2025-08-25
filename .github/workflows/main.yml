@@ -1,31 +1,82 @@
-name: Build/release
+name: Build & Publish (Electron Forge)
 
-on: push
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  release:
+  build-and-publish:
+    name: ${{ matrix.os }} • Node ${{ matrix.node }}
     runs-on: ${{ matrix.os }}
-
     strategy:
+      fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
+        node: [20]
+
+    env:
+      # Your forge publisher config expects GH_TOKEN
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      # Speeds up Electron downloads across matrix
+      ELECTRON_CACHE: ${{ runner.temp }}/electron
 
     steps:
-      - name: Check out Git repository
-        uses: actions/checkout@v1
-
-      - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v1
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          node-version: 22
+          fetch-depth: 0
 
-      - name: Build/release Electron app
-        uses: samuelmeuli/action-electron-builder@v1
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
-          # GitHub token, automatically provided to the action
-          # (No need to define this secret in the repo settings)
-          github_token: ${{ secrets.github_token }}
+          node-version: ${{ matrix.node }}
+          cache: "npm"
 
-          # If the commit is tagged with a version (e.g. "v1.0.0"),
-          # release the app after building
-          release: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      # Linux build deps (RPM/DEB tooling, fakeroot, etc.)
+      - name: Install Linux build deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            rpm fakeroot dpkg-dev libarchive-tools xz-utils
+
+      # Windows: make sure long paths are enabled (sometimes helps nested deps)
+      - name: Enable git longpaths (Windows)
+        if: runner.os == 'Windows'
+        run: git config --system core.longpaths true
+
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+        shell: bash
+
+      # Optional: verify forge is present (useful if scripts rely on it)
+      - name: Ensure electron-forge is available
+        run: npx electron-forge --version
+
+      # Build & publish for the current OS
+      - name: Publish with Electron Forge
+        run: npm run publish
+
+      # Upload artifacts from each OS run (handy for inspection)
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ runner.os }}
+          path: |
+            out/**
+            dist/**
+          if-no-files-found: ignore
