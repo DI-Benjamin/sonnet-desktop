@@ -36,9 +36,13 @@ module.exports = {
       config: {
         setupIcon: './resources/AppIcon.ico',
         options: {
-          icon: './resources/AppIcon.ico'
+          icon: './resources/AppIcon.ico',
         },
-        name: 'Sonnet Studio',
+        authors: 'Digital Individuals',
+        copyright: 'Copyright © 2025 Digital Individuals',
+        description: 'Sonnet Studio',
+        name: 'Sonnet.Studio',
+        productName: 'Sonnet Studio',
         version: '1.0.0',
       },
     },
