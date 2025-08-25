@@ -31,7 +31,6 @@ jobs:
     env:
       # electron-forge's GitHub publisher looks for GH_TOKEN
       GH_TOKEN: ${{ secrets.GH_TOKEN != '' && secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
-      ELECTRON_CACHE: ${{ runner.temp }}/electron
       npm_config_fund: "false"
       npm_config_audit: "false"
 
@@ -69,10 +68,6 @@ jobs:
 
       - name: Verify electron-forge
         run: npx electron-forge --version
-
-      # Build & publish (uses your package.json "publish": "electron-forge publish")
-      - name: Publish with Electron Forge
-        run: npm run publish
 
       - name: Upload dist artifacts
         uses: actions/upload-artifact@v4
